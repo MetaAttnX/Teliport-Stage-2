@@ -85,114 +85,89 @@ C:\Users\Dell\LatentMAS_Medical\
 ├── 📁 checkpoints/                          # YOUR TRAINED MODEL WEIGHTS
 │   ├── 📁 mechanical_expert/                 # Fine-tuned CAD expert
 │   │   └── 📁 final_model/                    # Actual weights
-│   ├── 📁 electronics_expert/                # Fine-tuned VHDL expert
-│   │   └── 📁 final_model/
-│   ├── 📁 firmware_expert/                   # Fine-tuned C++ expert
-│   │   └── 📁 final_model/
-│   └── 📁 bio_expert/                        # Fine-tuned biomedical expert
-│       └── 📁 final_model/
-│
-├── 📁 configs/                               # CONFIGURATION FILES
-│   └── 📄 agent_config.yaml                   # Agent parameters
-│
-├── 📁 outputs/                                # GENERATED DESIGNS
-│   └── 📁 pulse_ox_design_output/             # EXAMPLE OUTPUT FOLDER
-│       ├── 📄 full_design.json                 # Complete design in JSON
-│       ├── 📁 firmware/                         # Generated firmware files
-│       │   ├── 📄 pulse_ox_main.cpp
-│       │   ├── 📄 sensor_driver.h
-│       │   └── 📄 rtos_config.h
-│       ├── 📁 hardware/                         # Generated HDL files
-│       │   ├── 📄 pulse_ox_frontend.vhd
-│       │   ├── 📄 pulse_ox_top.v
-│       │   └── 📄 schematic.net
-│       ├── 📁 mechanical/                        # Generated CAD files
-│       │   ├── 📄 enclosure.scad
-│       │   ├── 📄 material_spec.json
-│       │   └── 📄 assembly.step
-│       ├── 📁 bio/                               # Generated safety specs
-│       │   ├── 📄 safety_spec.json
-│       │   ├── 📄 biocompatibility.txt
-│       │   └── 📄 clinical_workflow.md
-│       ├── 📁 test/                              # Test benches
-│       │   ├── 📄 test_pulse_ox.py
-│       │   └── 📄 simulation_results.txt
-│       └── 📁 manufacturing/                      # Manufacturing files
-│           ├── 📄 bom.csv
-│           └── 📄 pcb_requirements.txt
-│
-└── 📄 README.md                              # THIS FILE
+# Multi-Agent AI System for Medical Device Design
 
+This repository implements a latent-space multi-agent system for designing medical devices (for example: pulse oximeters, defibrillators, dialysis machines). Four specialized agents (mechanical, electronics, firmware, and biomedical) collaborate by sharing internal latent representations rather than text to reduce information loss.
 
-📂 Output Folder: pulse_ox_design_output
-When you run:
+## Quickstart
 
-bash
-python run.py --task "Design pulse oximeter" --output_dir ./outputs/pulse_ox_design_output
-The system creates outputs/pulse_ox_design_output/ containing:
+Install dependencies:
 
-📄 1. full_design.json - Complete design in one file
-json
+```bash
+pip install -r requirements.txt
+```
+
+Run the main demo (example):
+
+```bash
+python run.py --task "Design pulse oximeter" --latent_steps 50 --output_dir ./outputs/pulse_ox_design_output
+```
+
+## Project Overview
+
+- `run.py` — Main entry point that loads trained agents and runs design tasks.
+- `models.py` — Latent space engine and model wrappers.
+- `prompts.py` — Prompt and task templates.
+- `utils.py` — Helper functions (I/O, JSON, visualization).
+- `data_preparation.py` — Data cleaning / preprocessing script.
+- `train_agents.py` — Fine-tuning script for the agent models.
+- `requirements.txt` — Python dependencies (torch, transformers, etc.).
+
+### Agents (package: `agents/`)
+
+- `mechanical_agent.py` — CAD/mechanical expert (generates STEP, OpenSCAD, material specs).
+- `electronics_agent.py` — VHDL/circuit expert (generates VHDL/Verilog, BOMs, schematics).
+- `firmware_agent.py` — Embedded C++ expert (generates firmware, RTOS configs).
+- `bio_agent.py` — Biomedical expert (safety specs, standards, biocompatibility).
+
+### Methods (package: `methods/`)
+
+- `baseline.py` — Single-model baseline for comparison.
+- `text_mas.py` — Text-based multi-agent approach (agents communicate via text).
+- `latent_mas.py` — Latent-space multi-agent implementation (agents share internal representations).
+
+### Data and Checkpoints
+
+- `data/` — Prepared training data (JSONL examples per domain).
+- `checkpoints/` — Trained model weights (one directory per agent).
+- `configs/agent_config.yaml` — Agent hyperparameters and settings.
+
+## Example output structure
+
+When you run the example above the system will create an output folder such as `outputs/pulse_ox_design_output/` containing:
+
+- `full_design.json` — Complete design JSON with metadata and generated files.
+- `firmware/` — Generated C++ firmware files (e.g., `pulse_ox_main.cpp`, sensor driver headers).
+- `hardware/` — HDL and schematics (VHDL/Verilog, netlists).
+- `mechanical/` — CAD output (OpenSCAD, STEP, material specs).
+- `bio/` — Safety and compliance documents (IEC/ISO references, clinical workflow).
+- `test/` — Test benches and simulation outputs.
+- `manufacturing/` — BOMs and manufacturing notes.
+
+Example `full_design.json` (abbreviated):
+
+```json
 {
   "design_id": "POX-20250302-001",
   "timestamp": "2025-03-02T10:30:00",
-  "specifications": {...},
+  "specifications": { /* ... */ },
   "agents_used": ["mechanical", "electronics", "firmware", "bio"],
-  "generated_files": {
-    "firmware": {...},
-    "hardware": {...},
-    "mechanical": {...},
-    "bio": {...}
-  }
+  "generated_files": { /* firmware, hardware, mechanical, bio */ }
 }
-📁 2. firmware/ - Actual C++ code files
-pulse_ox_main.cpp - Main controller code
+```
 
-sensor_driver.h - MAX30102 sensor driver
+## Notes
 
-rtos_config.h - FreeRTOS configuration
+- Use `data_preparation.py` to convert raw sources into training JSONL files before fine-tuning.
+- Store checkpoints under `checkpoints/<agent>_expert/final_model/`.
 
-algorithm.cpp - Signal processing algorithms
+---
 
-📁 3. hardware/ - VHDL/Verilog and schematics
-pulse_ox_frontend.vhd - VHDL implementation
+If you want, I can also:
 
-pulse_ox_top.v - Verilog alternative
-
-schematic.net - KiCad netlist
-
-bom_hardware.csv - Component list
-
-📁 4. mechanical/ - CAD and material specs
-enclosure.scad - OpenSCAD 3D model
-
-material_spec.json - Material properties
-
+- Add a short CONTRIBUTING section and license.
+- Create a minimal README badge / table of contents.
 assembly.step - STEP file (CAD)
 
-pcb_mount.scad - PCB holder design
-
-📁 5. bio/ - Safety and compliance
-safety_spec.json - IEC 60601-1 requirements
-
-biocompatibility.txt - ISO 10993 certifications
-
-clinical_workflow.md - Usage guidelines
-
-sterilization.txt - Sterilization methods
-
-📁 6. test/ - Verification files
-test_pulse_ox.py - Python test bench
-
-simulation_results.txt - Simulation outputs
-
-waveform_data.csv - Test waveforms
-
-📁 7. manufacturing/ - Production files
-bom.csv - Complete bill of materials
-
-pcb_requirements.txt - PCB fabrication notes
-
-assembly_instructions.md - Assembly guide
 
 
